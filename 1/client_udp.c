@@ -9,23 +9,21 @@
 
 #include "common.h"
 
-static const char *server_ip = "127.0.0.1";
-
 int main(void) {
-	struct sockaddr_in si_other;
-	int s = 0;
+	struct sockaddr_in sockaddr_server;
+	int sock_client = 0;
 	char package[buf_size];
-	if ((s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
+	if ((sock_client = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
 		err_write("socket");
-	memset((char *) &si_other, 0, sizeof(si_other));
-	si_other.sin_family = AF_INET;
-	si_other.sin_port = htons(port);
-	if (inet_pton(AF_INET, server_ip, &si_other.sin_addr) == 0)
-		err_write("inet_pton()");
+	memset((char *) &sockaddr_server, 0, sizeof(sockaddr_server));
+	sockaddr_server.sin_family = AF_INET;
+	sockaddr_server.sin_port = htons(port);
+	sockaddr_server.sin_addr.s_addr = inet_addr("127.0.0.1");
 	sprintf(package, "PACKAGE");
 	printf("Sending package...\n");
-	if (sendto(s, package, buf_size, 0, (struct sockaddr *)&si_other, sizeof(si_other)) == -1)
+	if (sendto(sock_client, package, buf_size, 0, (struct sockaddr *)&sockaddr_server,
+					sizeof(sockaddr_server)) == -1)
 		err_write("sendto()");
-	close(s);
+	close(sock_client);
 	return 0;
 }
