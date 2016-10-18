@@ -22,9 +22,9 @@ int main(void) {
 	if (bind(sock_server, (struct sockaddr *)&sockaddr_server,
 				sizeof(sockaddr_server)) == -1)
 		err_write("bind()");
-	socklen_t sockaddr_length = sizeof(struct sockaddr_in);
+	socklen_t sockaddr_size = sizeof(struct sockaddr_in);
 	if (recvfrom(sock_server, buf, buf_size, 0,
-					(struct sockaddr *)&sockaddr_client, &sockaddr_length) == -1)
+					(struct sockaddr *)&sockaddr_client, &sockaddr_size) == -1)
 		err_write("recvfrom()");
 	printf("Received package from %s:%d\nData: %s\n\n",
 			inet_ntoa(sockaddr_client.sin_addr),

@@ -5,18 +5,17 @@
 #include <arpa/inet.h>
 
 int main(void){
-  int clientSocket;
-  char buffer[1024];
-  struct sockaddr_in serverAddr;
-  socklen_t addr_size;
-  clientSocket = socket(PF_INET, SOCK_STREAM, 0);
-  serverAddr.sin_family = AF_INET;
-  serverAddr.sin_port = htons(7891);
-  serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-  memset(serverAddr.sin_zero, 0, sizeof serverAddr.sin_zero);
-  addr_size = sizeof serverAddr;
-  connect(clientSocket, (struct sockaddr *) &serverAddr, addr_size);
-  recv(clientSocket, buffer, 1024, 0);
-  printf("Data received: %s",buffer);
+  int sock_client = 0;
+  char buffer[512];
+  struct sockaddr_in sockaddr_server;
+  sock_client = socket(AF_INET, SOCK_STREAM, 0);
+  sockaddr_server.sin_family = AF_INET;
+  sockaddr_server.sin_port = htons(7891);
+  sockaddr_server.sin_addr.s_addr = inet_addr("127.0.0.1");
+  memset(sockaddr_server.sin_zero, 0, sizeof sockaddr_server.sin_zero);
+  socklen_t sock_server_size = sizeof(sockaddr_server);
+  connect(sock_client, (struct sockaddr *) &sockaddr_server, sock_server_size);
+  recv(sock_client, buffer, 512, 0);
+  printf("Data received: %s", buffer);
   return 0;
 }
