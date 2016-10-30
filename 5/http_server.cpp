@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const int my_port = 80;
+static const int my_port = 8000;
 static const char *server_addr = "127.0.0.1";
 static const int max_client_buffer_size = 1024;
 
@@ -48,9 +48,9 @@ int main(void)
     struct sockaddr_in client_addr;
     memset(&client_addr, 0, sizeof(struct sockaddr_in));
     socklen_t client_addr_size = sizeof(client_addr);
+    int result = 0;
     char buf[max_client_buffer_size];
-    for (;;) {
-        //Принимаем входящие соединения
+    for (;;result >= 0) {
         client_socket = accept(listen_socket, (struct sockaddr *) &client_addr, &client_addr_size);
         if(client_socket < 0) {
             printf("Error on accept\n");
@@ -58,46 +58,60 @@ int main(void)
             return -1;
         }
         memset(&buf, 0, max_client_buffer_size);
-        int result = recv(client_socket, buf, max_client_buffer_size, 0);
-        std::stringstream response; // сюда будет записываться ответ клиенту
-        std::stringstream response_body; // тело ответа
+        result = recv(client_socket, buf, max_client_buffer_size, 0);
+        std::stringstream response;
+        std::stringstream response_body;
         if (result < 0) {
-            // ошибка получения данных
             std::cerr << "recv failed: " << result << "\n";
             close(client_socket);
         } else if (result == 0) {
-            // соединение закрыто клиентом
-            std::cerr << "connection closed...\n";
+            std::cerr << "Connection closed\n";
         } else if (result > 0) {
-            // Мы знаем фактический размер полученных данных, поэтому ставим метку конца строки
-            // В буфере запроса.
             buf[result] = '\0';
-            // Данные успешно получены
-            // формируем тело ответа (HTML)
-            response_body << "<title>Test C++ HTTP Server</title>\n"
-                << "<h1>Test page</h1>\n"
-                << "<p>This is body of the test page...</p>\n"
-                << "<h2>Request headers</h2>\n"
-                << "<pre>" << buf << "</pre>\n"
-                << "<em><small>Test C++ Http Server</small></em>\n";
-            // Формируем весь ответ вместе с заголовками
-            response << "HTTP/1.1 200 OK\r\n"
-                << "Version: HTTP/1.1\r\n"
-                << "Content-Type: text/html; charset=utf-8\r\n"
-                << "Content-Length: " << response_body.str().length()
-                << "\r\n\r\n"
-                << response_body.str();
-            // Отправляем ответ клиенту с помощью функции send
+            char *buf_copy = (char *)malloc(max_client_buffer_size);
+            buf_copy = strcpy(buf_copy, buf);
+            char *head = strtok(buf_copy, "\r\n");
+            free(buf_copy);
+            if (strcmp(head, "GET / HTTP/1.1") == 0) {
+                response_body << "<title>Test C++ HTTP Server</title>\n"
+                    << "<h1>Test page</h1>\n"
+                    << "<p>This is body of the test page...</p>\n"
+                    << "<h2>Request headers</h2>\n"
+                    << "<pre>" << buf << "</pre>\n"
+                    << "<em><small>Test C++ Http Server</small></em>\n";
+                response << "HTTP/1.1 200 OK\r\n"
+                    << "Version: HTTP/1.1\r\n"
+                    << "Content-Type: text/html; charset=utf-8\r\n"
+                    << "Connetion: Closed"
+                    << "Content-Length: " << response_body.str().length()
+                    << "\r\n\r\n"
+                    << response_body.str();
+            }
+            else {
+                response_body << "<html>\n"
+                    << "<head>\n"
+                    << "<title>404 Not Found</title>"
+                    << "</head>\n"
+                    << "<body>\n"
+                    << "<h1>Not Found</h1>\n"
+                    << "<p>The requested URL was not found on this server.</p>\n"
+                    << "</body>\n"
+                    << "</html>\n";
+                response << "HTTP/1.1 400 Not Found\r\n"
+                    << "Version: HTTP/1.1\r\n"
+                    << "Content-Type: text/html; charset=utf-8\r\n"
+                    << "Connetion: Closed"
+                    << "Content-Length: " << response_body.str().length()
+                    << "\r\n\r\n"
+                    << response_body.str();
+            }
             result = send(client_socket, response.str().c_str(), response.str().length(), 0);
             if (result < 0) {
-                // произошла ошибка при отправле данных
                 std::cerr << "send failed: \n";
             }
-            // Закрываем соединение к клиентом
             close(client_socket);
         }
     }
-    // Убираем за собой
     close(listen_socket);
     return 0;
 }
