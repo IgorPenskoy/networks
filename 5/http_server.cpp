@@ -82,7 +82,7 @@ int main(void)
                 response << "HTTP/1.1 200 OK\r\n"
                     << "Version: HTTP/1.1\r\n"
                     << "Content-Type: text/html; charset=utf-8\r\n"
-                    << "Connetion: Closed"
+                    << "Connetion: Closed\r\n"
                     << "Content-Length: " << response_body.str().length()
                     << "\r\n\r\n"
                     << response_body.str();
