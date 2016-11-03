@@ -39,7 +39,7 @@ int main(void) {
 	}
 	printf("Connected to port %d\n", port);
     std::stringstream request;
-    request << "GET / HTTP/1.1\r\n"
+    request << "GET /main.html HTTP/1.1\r\n"
     	<< "Host: " << server_addr << ":" << port << "\r\n";
     printf("Sending GET request\n\n");
 	send(my_sock, request.str().c_str(), 1024, 0);
